@@ -1,0 +1,23 @@
+type Query {
+  welcome: String!
+  events: [Event!]!
+}
+
+type Event {
+  id: ID!
+  title: String!
+  description: String!
+  price: Float!
+  date: String!
+}
+
+type Mutation {
+  createEvent(data: CreateEventInput): Event
+}
+
+input CreateEventInput {
+  title: String!
+  description: String!
+  price: Float!
+  date: String!
+}
