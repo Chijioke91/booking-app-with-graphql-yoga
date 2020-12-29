@@ -1,10 +1,19 @@
 type Query {
   welcome: String!
+  me: User!
   event(id: ID!): Event!
   events: [Event!]!
   users: [User!]!
   booking(id: ID!): Booking!
   bookings: [Booking!]!
+}
+
+type Mutation {
+  createEvent(data: CreateEventInput): Event
+  createUser(data: AuthInput): AuthPayload!
+  loginUser(data: AuthInput): AuthPayload!
+  bookEvent(eventId: ID!): Booking!
+  cancelBooking(bookingId: ID!): Event!
 }
 
 type Booking {
@@ -31,11 +40,9 @@ type User {
   createdEvents: [Event!]
 }
 
-type Mutation {
-  createEvent(data: CreateEventInput): Event
-  createUser(data: CreateUserInput): User
-  bookEvent(eventId: ID!): Booking!
-  cancelBooking(bookingId: ID!): Event!
+type AuthPayload {
+  user: User!
+  token: String!
 }
 
 input CreateEventInput {
@@ -45,7 +52,7 @@ input CreateEventInput {
   date: String
 }
 
-input CreateUserInput {
+input AuthInput {
   email: String!
   password: String!
 }

@@ -1,4 +1,5 @@
 import { model, Schema } from 'mongoose';
+import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 const { ObjectId } = Schema.Types;
 
@@ -22,6 +23,12 @@ UserSchema.pre('save', async function (next) {
 // check for password match
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   return bcrypt.compare(enteredPassword, this.password);
+};
+
+UserSchema.methods.getAuthToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRE,
+  });
 };
 
 export default model('User', UserSchema);

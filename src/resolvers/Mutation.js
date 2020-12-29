@@ -1,16 +1,20 @@
+import getUserId from '../utils/getUserId';
+
 const Mutation = {
   async createEvent(
     _,
     { data: { title, description, price, date } },
-    { models: { Event, User } }
+    { models: { Event, User }, request }
   ) {
+    const userId = getUserId(request);
+
     try {
       const newEvent = await Event.create({
         title,
         description,
         price,
         date,
-        createdBy: '5fe9ef85fe4bd409548c5340',
+        createdBy: userId,
       });
 
       const user = await User.findById(newEvent.createdBy);
@@ -34,28 +38,67 @@ const Mutation = {
 
       const newUser = await User.create({ email, password });
 
+      const token = newUser.getAuthToken();
+
       return {
-        id: newUser.id,
-        ...newUser._doc,
-        password: null,
+        user: {
+          id: newUser.id,
+          ...newUser._doc,
+          password: null,
+        },
+        token,
       };
     } catch (e) {
       throw new Error(e.message);
     }
   },
-  async bookEvent(parent, { eventId }, { models: { Booking } }) {
+  async loginUser(_, { data: { email, password } }, { models: { User } }) {
+    try {
+      // check user
+      let user = await User.findOne({ email }).select('+password');
+
+      if (!user) {
+        throw new Error('Invalid Credentials');
+      }
+
+      // check for password match
+      const isMatch = await user.matchPassword(password);
+
+      if (!isMatch) {
+        throw new Error('Invalid Credentials');
+      }
+
+      const token = user.getAuthToken();
+
+      return {
+        user,
+        token,
+      };
+    } catch (e) {
+      throw new Error(e.message);
+    }
+  },
+  async bookEvent(parent, { eventId }, { models: { Booking }, request }) {
+    const userId = getUserId(request);
     try {
       return Booking.create({
-        user: '5fe9ef85fe4bd409548c5340',
+        user: userId,
         event: eventId,
       });
     } catch (e) {
       throw new Error(e.message);
     }
   },
-  async cancelBooking(parent, { bookingId }, { models: { Booking, Event } }) {
+  async cancelBooking(parent, { bookingId }, { models: { Booking }, request }) {
     try {
-      const booking = await Booking.findById(bookingId).populate('event');
+      // const booking = await Booking.findById(bookingId).populate('event');
+
+      const userId = getUserId(request);
+
+      const booking = await Booking.findOne({
+        _id: bookingId,
+        user: userId,
+      }).populate('event');
 
       if (!booking) {
         throw new Error('Unable to Cancel Booking: Check if it exists');

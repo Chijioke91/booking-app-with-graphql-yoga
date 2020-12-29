@@ -1,7 +1,21 @@
+import formatDate from '../utils/formatDate';
+import getUserId from '../utils/getUserId';
+
 const Query = {
   welcome() {
     return 'Welcome to the App';
   },
+
+  async me(_, args, { models: { User }, request }) {
+    try {
+      const userId = getUserId(request);
+
+      return User.findById(userId);
+    } catch (e) {
+      throw new Error(e.message);
+    }
+  },
+
   async event(_, { id }, { models: { Event } }) {
     try {
       return Event.findById(id);
@@ -16,16 +30,18 @@ const Query = {
       return events.map((evt) => ({
         id: evt.id,
         ...evt._doc,
-        date: new Date(evt.date).toISOString(),
+        date: formatDate(evt.date),
       }));
     } catch (e) {
       throw new Error(e.message);
     }
   },
-  async users(parent, args, { models: { User } }) {
+  async users(parent, args, { models: { User }, request }) {
+    const userId = getUserId(request);
+
+    console.log(userId);
     try {
-      const users = await User.find();
-      return users;
+      return User.find();
     } catch (e) {
       throw new Error(e.message);
     }

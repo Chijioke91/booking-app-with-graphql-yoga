@@ -11,7 +11,12 @@ connectDb();
 const server = new GraphQLServer({
   typeDefs: './src/schema.graphql',
   resolvers,
-  context: { models },
+  context(request) {
+    return {
+      models,
+      request,
+    };
+  },
 });
 
 server.start({ port: process.env.PORT || 4000 }, () =>
